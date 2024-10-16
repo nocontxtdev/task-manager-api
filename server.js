@@ -21,6 +21,8 @@ app.get("/", (req, res) => {
   res.send("Welcome to task manager API");
 });
 
+app.use("/api/auth", require("./routes/auth"));
+
 // Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
