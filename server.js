@@ -1,7 +1,7 @@
 const express = require("express");
 require("dotenv").config(); // To load environment variables
 const connectDB = require("./config/db");
-const auth = require("./middleware/auth");
+const authMiddleware = require("./middleware/authMiddleware");
 const mongoose = require("mongoose");
 
 const app = express();
@@ -27,8 +27,8 @@ connectDB()
   .then(() => {
     // Routes
     app.use("/api/auth", require("./routes/auth"));
-    app.use("/api/account", auth, require("./routes/account"));
-    app.use("/api/tasks", auth, require("./routes/tasks"));
+    app.use("/api/account", authMiddleware, require("./routes/account"));
+    app.use("/api/tasks", authMiddleware, require("./routes/tasks"));
 
     // 404 Route Not Found handler
     app.use((req, res, next) => {
