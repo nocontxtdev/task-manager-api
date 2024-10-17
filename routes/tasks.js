@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const { check, validationResult } = require("express-validator");
 const auth = require("../middleware/auth");
-const User = require("../models/User");
 const Task = require("../models/Task");
 
 /**
@@ -15,6 +14,7 @@ router.post(
   [
     check("title", "Title is required").not().isEmpty(),
     check("description", "Description is required").not().isEmpty(),
+    check("dueDate", "Invalid date").optional().isISO8601(),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -22,19 +22,17 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { title, description, status, dueDate } = req.body;
-
-    // Convert DD-MM-YYYY to YYYY-MM-DD
-    const [day, month, year] = dueDate.split("-");
-    const formattedDate = `${year}-${month}-${day}`;
+    const { title, description, status, priority, dueDate } = req.body;
 
     try {
       const newTask = new Task({
         title,
         description,
         status,
-        dueDate: formattedDate,
+        priority,
+        dueDate,
         user: req.user.id,
+        activityLog: [{ action: "Task created", date: new Date() }],
       });
       const task = await newTask.save();
       res.json(task);
@@ -52,11 +50,10 @@ router.post(
  */
 router.get("/", auth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).populate("tasks");
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    res.json(user.tasks);
+    const tasks = await Task.find({ user: req.user.id })
+      .select("-user")
+      .sort({ date: -1 });
+    res.json(tasks);
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server Error");
@@ -70,7 +67,7 @@ router.get("/", auth, async (req, res) => {
  */
 router.get("/:id", async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id).populate("user");
+    const task = await Task.findById(req.params.id).select("-user");
 
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
@@ -89,43 +86,63 @@ router.get("/:id", async (req, res) => {
  * @access  Private
  */
 
-router.put("/:id", async (req, res) => {
-  const { title, description, status, dueDate } = req.body;
+router.put(
+  "/:id",
+  check("dueDate", "Invalid date").optional().isISO8601(),
+  async (req, res) => {
+    const { title, description, status, priority, dueDate } = req.body;
 
-  const taskFields = {};
+    const taskFields = {};
+    const activityEntry = [];
 
-  if (title) taskFields.title = title;
-  if (description) taskFields.description = description;
-  if (status) taskFields.status = status;
-  if (dueDate) {
-    const [day, month, year] = dueDate.split("-");
-    const formattedDate = `${year}-${month}-${day}`;
-    taskFields.dueDate = formattedDate;
-  }
+    if (title) taskFields.title = title;
 
-  try {
-    let task = await Task.findById(req.params.id);
+    if (description) taskFields.description = description;
 
-    if (!task) {
-      return res.status(404).json({ message: "Task not found" });
+    if (status) {
+      taskFields.status = status;
+      activityEntry.push({
+        action: `Status updated to ${status}`,
+        date: new Date(),
+      });
     }
 
-    if (task.user.toString() !== req.user.id) {
-      return res.status(401).json({ message: "User not authorized" });
+    if (dueDate) taskFields.dueDate = dueDate;
+
+    if (priority) {
+      taskFields.priority = priority;
+      activityEntry.push({
+        action: `Priority updated to ${priority}`,
+        date: new Date(),
+      });
     }
 
-    task = await Task.findByIdAndUpdate(
-      req.params.id,
-      { $set: taskFields },
-      { new: true }
-    );
+    try {
+      let task = await Task.findById(req.params.id);
 
-    res.json(task);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server Error");
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+
+      if (task.user.toString() !== req.user.id) {
+        return res.status(401).json({ message: "User not authorized" });
+      }
+
+      taskFields.activityLog = [...task.activityLog, ...activityEntry];
+
+      task = await Task.findByIdAndUpdate(
+        req.params.id,
+        { $set: taskFields },
+        { new: true }
+      );
+
+      res.json(task);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send("Server Error");
+    }
   }
-});
+);
 
 /**
  * @route   DELETE /api/tasks/:id

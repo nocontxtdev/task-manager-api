@@ -17,6 +17,11 @@ const TaskSchema = new mongoose.Schema(
       enum: ["Not Started", "In Progress", "Completed"],
       default: "Not Started",
     },
+    priority: {
+      type: String,
+      enum: ["Low", "Medium", "High"],
+      default: "Medium",
+    },
     dueDate: {
       type: Date,
     },
@@ -25,6 +30,12 @@ const TaskSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    activityLog: [
+      {
+        action: String, // e.g., "Updated status to completed"
+        date: { type: Date, default: Date.now },
+      },
+    ],
   },
   {
     timestamps: true,

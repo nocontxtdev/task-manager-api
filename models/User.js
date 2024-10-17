@@ -27,15 +27,18 @@ UserSchema.pre("save", async function (next) {
   next();
 });
 
+// Hash password before updating (if password is updated)
+UserSchema.pre("findOneAndUpdate", async function (next) {
+  const update = this.getUpdate();
+  if (update.password) {
+    update.password = await bcrypt.hash(update.password, 12);
+  }
+  next();
+});
+
 // Method to compare password during login
 UserSchema.method("matchPassword", async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
-});
-
-UserSchema.virtual("tasks", {
-  ref: "Task",
-  localField: "_id",
-  foreignField: "user",
 });
 
 module.exports = mongoose.model("User", UserSchema);
