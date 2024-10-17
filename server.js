@@ -2,6 +2,7 @@ const express = require("express");
 require("dotenv").config(); // To load environment variables
 const connectDB = require("./config/db");
 const auth = require("./middleware/auth");
+const mongoose = require("mongoose");
 
 const app = express();
 
@@ -56,14 +57,20 @@ connectDB()
     // Graceful shutdown on termination signals
     const shutdown = (signal) => {
       console.log(`Received ${signal}. Closing HTTP server...`);
+
+      // Close the MongoDB connection
+      mongoose.connection.close(() => {
+        console.log("MongoDB connection closed.");
+      });
+
       server.close(() => {
         console.log("HTTP server closed.");
         process.exit(0);
       });
     };
 
-    process.on("SIGINT", shutdown);
-    process.on("SIGTERM", shutdown);
+    process.on("SIGINT", shutdown); // Handle Ctrl+C (SIGINT)
+    process.on("SIGTERM", shutdown); // Handle termination signal (SIGTERM)
   })
   .catch((err) => {
     console.error("Error connecting to MongoDB", err.message);
