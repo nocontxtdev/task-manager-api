@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 require("dotenv").config(); // To load environment variables
+const auth = require("./middleware/auth");
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", require("./routes/auth"));
+app.use("/api/tasks", auth, require("./routes/tasks"));
 
 // Start the server
 const PORT = process.env.PORT || 5000;

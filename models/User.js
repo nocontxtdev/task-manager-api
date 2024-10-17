@@ -32,4 +32,10 @@ UserSchema.method("matchPassword", async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 });
 
+UserSchema.virtual("tasks", {
+  ref: "Task",
+  localField: "_id",
+  foreignField: "user",
+});
+
 module.exports = mongoose.model("User", UserSchema);
