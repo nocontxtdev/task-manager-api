@@ -24,6 +24,12 @@ const TaskSchema = new mongoose.Schema(
     },
     dueDate: {
       type: Date,
+      validate: {
+        validator: function (v) {
+          return !v || v > Date.now(); // Ensure that due date is either not set or is a future date
+        },
+        message: "Due date must be a future date",
+      },
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,

@@ -14,6 +14,12 @@ router.post(
   [
     check("title", "Title is required").not().isEmpty(),
     check("description", "Description is required").not().isEmpty(),
+    check("status", "Invalid status")
+      .optional()
+      .isIn(["Not Started", "In Progress", "Completed"]),
+    check("priority", "Invalid priority")
+      .optional()
+      .isIn(["Low", "Medium", "High"]),
     check("dueDate", "Invalid date").optional().isISO8601(),
   ],
   async (req, res) => {
@@ -88,7 +94,15 @@ router.get("/:id", async (req, res) => {
 
 router.put(
   "/:id",
-  check("dueDate", "Invalid date").optional().isISO8601(),
+  [
+    check("status", "Invalid status")
+      .optional()
+      .isIn(["Not Started", "In Progress", "Completed"]),
+    check("priority", "Invalid priority")
+      .optional()
+      .isIn(["Low", "Medium", "High"]),
+    check("dueDate", "Invalid date").optional().isISO8601(),
+  ],
   async (req, res) => {
     const { title, description, status, priority, dueDate } = req.body;
 
@@ -156,8 +170,8 @@ router.delete("/:id", async (req, res) => {
       return res.status(404).json({ message: "Task not found" });
     }
 
-    // Check if the user is the author of the post
-    if (task.author.toString() !== req.user.id) {
+    // Check if the user is the owner of the task
+    if (task.user.toString() !== req.user.id) {
       return res.status(401).json({ message: "User not authorized" });
     }
 

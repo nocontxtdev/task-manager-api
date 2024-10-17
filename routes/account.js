@@ -58,7 +58,10 @@ router.put(
       }
 
       await user.save();
-      res.json({ message: "Account updated successfully", user });
+      res.json({
+        message: "Account updated successfully",
+        user: user.select("-password"),
+      });
     } catch (err) {
       console.error(err.message);
       res.status(500).send("Server error");

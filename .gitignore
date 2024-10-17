@@ -1,2 +1,23 @@
+# Node modules
 node_modules/
+
+# Environment variables file
 .env
+
+# Logs
+*.log
+
+# npm-debug
+npm-debug.log*
+
+# VS Code settings
+.vscode/
+
+# MacOS Finder
+.DS_Store
+
+# Windows thumb cache
+Thumbs.db
+
+# Temporary files
+*.tmp

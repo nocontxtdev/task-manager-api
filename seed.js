@@ -52,7 +52,10 @@ const createDummyTasks = async (users) => {
         title: faker.hacker.phrase(), // Random title from faker
         description: faker.lorem.paragraph({ min: 2, max: 5 }), // Random description
         user: user._id, // Assign user to the task
-        dueDate: faker.date.future(), // Random future due date
+        dueDate: faker.date
+          .future({ years: 1, refDate: new Date() })
+          .toISOString()
+          .split("T")[0], // Random future due date
         status: status[random],
       });
     }

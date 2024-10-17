@@ -7,9 +7,16 @@
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "task manager",
+    "express",
+    "API",
+    "authentication",
+    "mongoose",
+    "jsonwebtoken"
+  ],
+  "author": "nocontxtdev",
+  "license": "UNLICENSED",
   "description": "",
   "dependencies": {
     "bcryptjs": "^2.4.3",
